@@ -12,15 +12,17 @@ enum class ItemType(
     val completable: Boolean,
     val colorHex: Long,
 ) {
-    TASK("task", "task", "Task", true, 0xFF4C5BD4),
-    PROJECT("project", "projects", "Project", true, 0xFF7C4DFF),
-    COMMITMENT("commitment", "commitments", "Commitment", true, 0xFFD81B60),
-    REMINDER("reminder", "reminders", "Reminder", true, 0xFFF4511E),
-    WAITING_FOR("waiting_for", "waiting-for", "Waiting For", true, 0xFF00897B),
-    IDEA("idea", "ideas", "Idea", false, 0xFFFDD835),
-    ROUTINE("routine", "routines", "Routine", false, 0xFF3949AB),
-    SUGGESTION("suggestion", "suggestions", "Suggestion", false, 0xFF8E24AA),
-    NOTE("note", "notes", "Note", false, 0xFF6D4C41);
+    // Punch palette: every type reads as either violet #7C3AED or coral #FF6A3D
+    // (see ItemType.tone in ui/ItemVisuals). colorHex is the row/icon accent.
+    TASK("task", "task", "Task", true, 0xFF7C3AED),
+    PROJECT("project", "projects", "Project", true, 0xFF7C3AED),
+    COMMITMENT("commitment", "commitments", "Commitment", true, 0xFFFF6A3D),
+    REMINDER("reminder", "reminders", "Reminder", true, 0xFFFF6A3D),
+    WAITING_FOR("waiting_for", "waiting-for", "Waiting For", true, 0xFF7C3AED),
+    IDEA("idea", "ideas", "Idea", false, 0xFF7C3AED),
+    ROUTINE("routine", "routines", "Routine", false, 0xFF7C3AED),
+    SUGGESTION("suggestion", "suggestions", "Suggestion", false, 0xFFFF6A3D),
+    NOTE("note", "notes", "Note", false, 0xFFFF6A3D);
 
     companion object {
         fun fromWire(value: String?): ItemType? =

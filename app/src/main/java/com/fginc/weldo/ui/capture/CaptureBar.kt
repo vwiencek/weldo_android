@@ -5,28 +5,31 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,22 +40,25 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fginc.weldo.data.ItemDraft
 import com.fginc.weldo.data.model.CaptureProposal
 import com.fginc.weldo.data.model.ItemType
-import kotlinx.coroutines.launch
+import com.fginc.weldo.ui.theme.WeldoTheme
 
 /**
- * The four capture entry points (new / text / voice / photo) + their review sheets.
+ * The two capture entry points — **Add item** (manual: fill the form directly) and
+ * **Use AI** (a chooser between Voice → transcribe → /capture and Photo → /capture/image).
  * Embeddable in any screen; when [projectId] is set, created items land inside that project.
  * Calls [onChanged] after any successful create/batch so the host can reload.
  */
@@ -61,7 +67,6 @@ import kotlinx.coroutines.launch
 fun CaptureBar(projectId: String? = null, onChanged: () -> Unit, modifier: Modifier = Modifier) {
     val vm: CaptureViewModel = viewModel()
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     val allProjects by vm.allProjects.collectAsState()
     val event by vm.event.collectAsState()
@@ -71,7 +76,7 @@ fun CaptureBar(projectId: String? = null, onChanged: () -> Unit, modifier: Modif
 
     var formDraft by remember { mutableStateOf<ItemDraft?>(null) }
     var batchProposal by remember { mutableStateOf<CaptureProposal?>(null) }
-    var showTextSheet by remember { mutableStateOf(false) }
+    var showAiChooser by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(event) {
@@ -84,12 +89,12 @@ fun CaptureBar(projectId: String? = null, onChanged: () -> Unit, modifier: Modif
     }
 
     val recorder = remember { VoiceRecorder(context) }
+    fun startVoice() {
+        showAiChooser = false
+        recorder.start(onResult = { vm.classifyText(it, projectId) }, onError = { errorText = it })
+    }
     val micPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) {
-            recorder.start(onResult = { vm.classifyText(it, projectId) }, onError = { errorText = it })
-        } else {
-            errorText = "Microphone permission needed"
-        }
+        if (granted) startVoice() else errorText = "Microphone permission needed"
     }
     val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
@@ -100,30 +105,48 @@ fun CaptureBar(projectId: String? = null, onChanged: () -> Unit, modifier: Modif
 
     Surface(tonalElevation = 3.dp, modifier = modifier.fillMaxWidth()) {
         Row(
-            Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CaptureButton(Icons.Filled.Add, "New") { formDraft = ItemDraft.blank(ItemType.TASK, projectId) }
-            CaptureButton(Icons.Filled.Edit, "Text") { showTextSheet = true }
-            CaptureButton(Icons.Filled.Mic, "Voice") {
-                if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                    recorder.start(onResult = { vm.classifyText(it, projectId) }, onError = { errorText = it })
-                } else {
-                    micPermission.launch(Manifest.permission.RECORD_AUDIO)
-                }
+            FilledTonalButton(
+                onClick = { formDraft = ItemDraft.blank(ItemType.TASK, projectId) },
+                modifier = Modifier.weight(1f),
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.size(8.dp))
+                Text("Add item")
             }
-            CaptureButton(Icons.Filled.PhotoCamera, "Photo") {
-                photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            Button(
+                onClick = { showAiChooser = true },
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = WeldoTheme.colors.coral,
+                    contentColor = Color.White,
+                ),
+            ) {
+                Icon(Icons.Filled.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.size(8.dp))
+                Text("Use AI")
             }
             if (busy) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
         }
     }
 
-    if (showTextSheet) {
-        TextCaptureSheet(
-            onDismiss = { showTextSheet = false },
-            onSubmit = { showTextSheet = false; vm.classifyText(it, projectId) },
+    if (showAiChooser) {
+        AiChooserSheet(
+            onDismiss = { showAiChooser = false },
+            onVoice = {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    startVoice()
+                } else {
+                    micPermission.launch(Manifest.permission.RECORD_AUDIO)
+                }
+            },
+            onPhoto = {
+                showAiChooser = false
+                photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            },
         )
     }
 
@@ -155,34 +178,74 @@ fun CaptureBar(projectId: String? = null, onChanged: () -> Unit, modifier: Modif
     }
 }
 
+/** "Use AI" — pick voice or photo capture; both feed the same /capture review. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CaptureButton(icon: ImageVector, label: String, onClick: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        FilledTonalIconButton(onClick = onClick) { Icon(icon, contentDescription = label) }
-        Text(label, style = MaterialTheme.typography.labelSmall)
+private fun AiChooserSheet(onDismiss: () -> Unit, onVoice: () -> Unit, onPhoto: () -> Unit) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp)) {
+            Text("Use AI", style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Capture by voice or photo — AI turns it into items.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = WeldoTheme.colors.muted,
+            )
+            Spacer(Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                AiChoice(
+                    icon = Icons.Filled.Mic,
+                    title = "Voice",
+                    subtitle = "Speak; we'll transcribe it",
+                    tint = WeldoTheme.colors.violetTintFg,
+                    tintBg = WeldoTheme.colors.violetTintBg,
+                    modifier = Modifier.weight(1f),
+                    onClick = onVoice,
+                )
+                AiChoice(
+                    icon = Icons.Filled.PhotoCamera,
+                    title = "Photo",
+                    subtitle = "Use your camera or upload",
+                    tint = WeldoTheme.colors.coralTintFg,
+                    tintBg = WeldoTheme.colors.coralTintBg,
+                    modifier = Modifier.weight(1f),
+                    onClick = onPhoto,
+                )
+            }
+        }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TextCaptureSheet(onDismiss: () -> Unit, onSubmit: (String) -> Unit) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var text by remember { mutableStateOf("") }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
-            Text("Capture", style = MaterialTheme.typography.titleMedium)
-            Spacer(Modifier.heightIn(min = 8.dp).size(8.dp))
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
-                label = { Text("Type or paste…") },
-            )
-            Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.End) {
-                TextButton(onClick = onDismiss) { Text("Cancel") }
-                Spacer(Modifier.width(8.dp))
-                Button(onClick = { if (text.isNotBlank()) onSubmit(text) }, enabled = text.isNotBlank()) { Text("Capture") }
-            }
-        }
+private fun AiChoice(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    tint: Color,
+    tintBg: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .clickable(onClick = onClick)
+            .padding(vertical = 20.dp, horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            Modifier.size(52.dp).clip(RoundedCornerShape(14.dp)).background(tintBg),
+            contentAlignment = Alignment.Center,
+        ) { Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(24.dp)) }
+        Spacer(Modifier.height(10.dp))
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(2.dp))
+        Text(
+            subtitle,
+            style = MaterialTheme.typography.labelSmall,
+            color = WeldoTheme.colors.muted,
+        )
     }
 }

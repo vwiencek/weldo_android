@@ -48,6 +48,25 @@ class ItemDetailViewModel : ViewModel() {
         }
     }
 
+    /** Routine: flip the Active flag via the full-replace update. */
+    fun toggleActive() {
+        val draft = (_state.value as? DetailUiState.Loaded)?.draft ?: return
+        if (draft.type != ItemType.ROUTINE) return
+        viewModelScope.launch {
+            repo.update(draft.copy(active = !draft.active)).onSuccess { refresh() }
+        }
+    }
+
+    /** Routine: mark done for today (best-effort; mirrors the web action). */
+    fun markRoutineDone() {
+        val draft = (_state.value as? DetailUiState.Loaded)?.draft ?: return
+        val id = draft.id ?: return
+        if (draft.type != ItemType.ROUTINE) return
+        viewModelScope.launch {
+            repo.setCompleted(draft.type, id, true).onSuccess { refresh() }
+        }
+    }
+
     fun delete(onDone: () -> Unit) {
         val draft = (_state.value as? DetailUiState.Loaded)?.draft ?: return
         val id = draft.id ?: return

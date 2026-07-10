@@ -1,5 +1,6 @@
 package com.fginc.weldo.ui.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -39,6 +40,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fginc.weldo.data.model.AnyItem
@@ -78,6 +81,8 @@ fun HomeScreen(
         bottomBar = { CaptureBar(projectId = null, onChanged = { vm.load() }) },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
+            if (state.query.isBlank()) GreetingHero(state.stats)
+
             OutlinedTextField(
                 value = state.query,
                 onValueChange = { vm.setQuery(it) },
@@ -127,6 +132,41 @@ fun HomeScreen(
                 }
             }
         }
+    }
+}
+
+/** Violet gradient greeting card: "You have N open items and a M-day streak." */
+@Composable
+private fun GreetingHero(stats: com.fginc.weldo.data.model.Statistics?) {
+    val c = com.fginc.weldo.ui.theme.WeldoTheme.colors
+    val hour = java.time.LocalTime.now().hour
+    val part = when { hour < 12 -> "morning"; hour < 18 -> "afternoon"; else -> "evening" }
+    val open = stats?.openItems ?: 0
+    val streak = stats?.streakDays ?: 0
+    val message = androidx.compose.ui.text.buildAnnotatedString {
+        append("You have ")
+        withStyle(androidx.compose.ui.text.SpanStyle(color = c.heroHighlight)) {
+            append("$open open ${if (open == 1L) "item" else "items"}")
+        }
+        append(" and a ")
+        withStyle(androidx.compose.ui.text.SpanStyle(color = c.heroHighlight)) { append("$streak-day streak") }
+        append(".")
+    }
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(18.dp))
+            .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(c.heroGradStart, c.heroGradEnd)))
+            .padding(horizontal = 20.dp, vertical = 18.dp),
+    ) {
+        Text(
+            "Good $part",
+            style = MaterialTheme.typography.labelLarge,
+            color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f),
+        )
+        androidx.compose.foundation.layout.Spacer(Modifier.size(4.dp))
+        Text(message, style = MaterialTheme.typography.headlineSmall, color = androidx.compose.ui.graphics.Color.White)
     }
 }
 
