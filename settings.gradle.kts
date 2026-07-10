@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "My ApplicationWeldo"
+rootProject.name = "weldo_android"
 include(":app")
