@@ -23,7 +23,7 @@ android {
 
         // Default backend base URL. Emulator reaches the host machine's :5555 via 10.0.2.2.
         // Override at runtime in Settings, or point at the ngrok dev tunnel here.
-        buildConfigField("String", "DEFAULT_BASE_URL", "\"http://10.0.2.2:5555\"")
+        buildConfigField("String", "DEFAULT_BASE_URL", "\"https://adolph-ungeographical-michel.ngrok-free.dev\"")
         // Sign in with Apple — web OAuth (Services ID) values. Fill these to enable.
         buildConfigField("String", "APPLE_WEB_CLIENT_ID", "\"\"")
         buildConfigField("String", "APPLE_REDIRECT_URI", "\"\"")
