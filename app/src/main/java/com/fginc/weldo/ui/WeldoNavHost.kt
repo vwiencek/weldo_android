@@ -9,7 +9,6 @@ import androidx.navigation.navArgument
 import com.fginc.weldo.WeldoApp
 import com.fginc.weldo.data.model.ItemType
 import com.fginc.weldo.ui.detail.ItemDetailScreen
-import com.fginc.weldo.ui.home.HomeScreen
 import com.fginc.weldo.ui.login.LoginScreen
 import com.fginc.weldo.ui.project.ProjectScreen
 import com.fginc.weldo.ui.settings.SettingsScreen
@@ -42,7 +41,7 @@ fun WeldoNavHost() {
         }
 
         composable(Routes.HOME) {
-            HomeScreen(
+            MainShell(
                 onOpenItem = { type, id -> nav.navigate(Routes.item(type, id)) },
                 onOpenProject = { id -> nav.navigate(Routes.project(id)) },
                 onOpenSettings = { nav.navigate(Routes.SETTINGS) },

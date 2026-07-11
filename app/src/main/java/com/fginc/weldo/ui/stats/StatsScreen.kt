@@ -3,6 +3,7 @@ package com.fginc.weldo.ui.stats
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,11 +36,6 @@ import com.fginc.weldo.ui.common.LoadingBox
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(onBack: () -> Unit) {
-    val vm: StatsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
-    val state by vm.state.collectAsState()
-
-    LaunchedEffect(Unit) { vm.load() }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -49,26 +45,38 @@ fun StatsScreen(onBack: () -> Unit) {
                 },
             )
         },
-    ) { padding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("week" to "Week", "month" to "Month", "year" to "Year").forEach { (value, label) ->
-                    FilterChip(selected = state.period == value, onClick = { vm.load(value) }, label = { Text(label) })
-                }
-            }
+    ) { padding -> StatsBody(padding) }
+}
 
-            when {
-                state.loading -> Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) { LoadingBox() }
-                state.error != null -> Text(state.error!!, color = MaterialTheme.colorScheme.error)
-                else -> StatsGrid(state.stats)
+/** Stats content for the Stats tab (no app bar); the shell supplies [contentPadding]. */
+@Composable
+fun StatsPane(contentPadding: PaddingValues) = StatsBody(contentPadding)
+
+@Composable
+private fun StatsBody(padding: PaddingValues) {
+    val vm: StatsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val state by vm.state.collectAsState()
+
+    LaunchedEffect(Unit) { vm.load() }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(padding)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("week" to "Week", "month" to "Month", "year" to "Year").forEach { (value, label) ->
+                FilterChip(selected = state.period == value, onClick = { vm.load(value) }, label = { Text(label) })
             }
+        }
+
+        when {
+            state.loading -> Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) { LoadingBox() }
+            state.error != null -> Text(state.error!!, color = MaterialTheme.colorScheme.error)
+            else -> StatsGrid(state.stats)
         }
     }
 }

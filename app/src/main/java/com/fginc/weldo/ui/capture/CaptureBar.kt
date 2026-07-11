@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -64,7 +66,12 @@ import com.fginc.weldo.ui.theme.WeldoTheme
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CaptureBar(projectId: String? = null, onChanged: () -> Unit, modifier: Modifier = Modifier) {
+fun CaptureBar(
+    projectId: String? = null,
+    onChanged: () -> Unit,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
+) {
     val vm: CaptureViewModel = viewModel()
     val context = LocalContext.current
 
@@ -77,6 +84,7 @@ fun CaptureBar(projectId: String? = null, onChanged: () -> Unit, modifier: Modif
     var formDraft by remember { mutableStateOf<ItemDraft?>(null) }
     var batchProposal by remember { mutableStateOf<CaptureProposal?>(null) }
     var showAiChooser by remember { mutableStateOf(false) }
+    var captureMenu by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(event) {
@@ -104,32 +112,68 @@ fun CaptureBar(projectId: String? = null, onChanged: () -> Unit, modifier: Modif
     }
 
     Surface(tonalElevation = 3.dp, modifier = modifier.fillMaxWidth()) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            FilledTonalButton(
-                onClick = { formDraft = ItemDraft.blank(ItemType.TASK, projectId) },
-                modifier = Modifier.weight(1f),
+        if (compact) {
+            // A single discrete "＋ Capture" pill whose menu offers the same two
+            // actions — keeps the bottom accessory uncluttered (web-rail parity).
+            Box(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.size(8.dp))
-                Text("Add item")
+                Box {
+                    Button(
+                        onClick = { captureMenu = true },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = WeldoTheme.colors.violet,
+                            contentColor = Color.White,
+                        ),
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.size(8.dp))
+                        Text("Capture")
+                    }
+                    DropdownMenu(expanded = captureMenu, onDismissRequest = { captureMenu = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Add item") },
+                            leadingIcon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                            onClick = { captureMenu = false; formDraft = ItemDraft.blank(ItemType.TASK, projectId) },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Use AI") },
+                            leadingIcon = { Icon(Icons.Filled.AutoAwesome, contentDescription = null) },
+                            onClick = { captureMenu = false; showAiChooser = true },
+                        )
+                    }
+                }
+                if (busy) CircularProgressIndicator(Modifier.align(Alignment.CenterEnd).size(22.dp), strokeWidth = 2.dp)
             }
-            Button(
-                onClick = { showAiChooser = true },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = WeldoTheme.colors.coral,
-                    contentColor = Color.White,
-                ),
+        } else {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Filled.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.size(8.dp))
-                Text("Use AI")
+                FilledTonalButton(
+                    onClick = { formDraft = ItemDraft.blank(ItemType.TASK, projectId) },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.size(8.dp))
+                    Text("Add item")
+                }
+                Button(
+                    onClick = { showAiChooser = true },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = WeldoTheme.colors.coral,
+                        contentColor = Color.White,
+                    ),
+                ) {
+                    Icon(Icons.Filled.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.size(8.dp))
+                    Text("Use AI")
+                }
+                if (busy) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
             }
-            if (busy) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
         }
     }
 
