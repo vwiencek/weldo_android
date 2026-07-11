@@ -29,7 +29,7 @@ JAVA_HOME=<jdk-21> ./gradlew :app:installDebug    # onto a running emulator/devi
 
 ## Talking to the backend
 
-- **Base URL** is configurable at runtime (Login → Advanced, or Settings → Server), persisted in DataStore. Default `http://10.0.2.2:5555` = the Android **emulator's** alias for the host's `localhost:5555` (`./gradlew localAnthropicBootRun`). Physical device → point at the ngrok https tunnel. Cleartext http is manifest-allowed for the emulator.
+- **Base URL** is configurable at runtime (Login → Advanced, or Settings → Server), persisted in DataStore; the compiled default (`DEFAULT_BASE_URL` in `app/build.gradle.kts`) is the ngrok tunnel. For a local backend on an emulator use `http://10.0.2.2:5577` = the Android emulator's alias for the host's `localhost:5577` (`./gradlew localAnthropicBootRun`). Cleartext http is manifest-allowed for the emulator. (Note: the backend moved off 5555 — that's adb's port and collides with a running emulator.)
 - **Auth** (`WeldoSession` holds the bearer, an HMAC JWT ~30-day TTL):
   - Email/password → `POST /auth/password/{login,register}`.
   - **Dev token** → Login → Advanced → type a name → sends `Authorization: Bearer test-<name>`, accepted by the backend's `local` profile. Fastest local path.
