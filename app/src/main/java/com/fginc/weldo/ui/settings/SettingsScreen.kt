@@ -22,6 +22,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -104,6 +105,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenStats: () -> Unit, onSignedOut: () 
             SettingsCard("Statistics") {
                 PeriodChips(selected = state.statsPeriod, onSelect = vm::setStatsPeriod)
                 OutlinedButton(onClick = onOpenStats, modifier = Modifier.fillMaxWidth()) { Text("View statistics") }
+                TextButton(onClick = vm::resetStatsPeriod, modifier = Modifier.fillMaxWidth()) { Text("Reset to default") }
             }
 
             // ---- Server ----

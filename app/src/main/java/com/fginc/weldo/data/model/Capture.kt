@@ -11,6 +11,9 @@ data class CaptureRequest(val text: String)
 data class CaptureImageRequest(val imageBase64: String, val mimeType: String = "image/jpeg")
 
 @Serializable
+data class CaptureFileRequest(val fileBase64: String, val mimeType: String? = null, val fileName: String? = null)
+
+@Serializable
 data class CaptureProjectProposal(
     val title: String? = null,
     val detail: String? = null,
@@ -22,11 +25,8 @@ data class CaptureItemProposal(
     val type: String? = null,
     val title: String? = null,
     val detail: String? = null,
-    val madeTo: String? = null,
-    val waitingOn: String? = null,
     val dueDate: String? = null,
     val remindAt: String? = null,
-    val followUpAt: String? = null,
     val recurrenceRule: String? = null,
     val confidence: Double? = null,
 )
@@ -53,17 +53,15 @@ data class BatchItemRequest(
     val type: String,
     val title: String,
     val detail: String? = null,
-    val madeTo: String? = null,
-    val waitingOn: String? = null,
     val dueDate: String? = null,
     val remindAt: String? = null,
-    val followUpAt: String? = null,
     val recurrenceRule: String? = null,
 )
 
 @Serializable
 data class BatchCreateRequest(
     val contextProjectId: String? = null,
+    val attachmentId: String? = null,
     val project: BatchProjectRequest? = null,
     val items: List<BatchItemRequest> = emptyList(),
 )

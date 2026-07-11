@@ -260,22 +260,13 @@ private fun DetailBody(
             when (draft.type) {
                 ItemType.TASK, ItemType.PROJECT ->
                     DetailRow("Due date", WeldoTime.formatDay(draft.dueDate), if (isDueUrgent(draft.dueDate)) c.coralFg else null)
-                ItemType.COMMITMENT -> {
-                    DetailRow("Made to", draft.madeTo)
-                    DetailRow("Due date", WeldoTime.formatDay(draft.dueDate), if (isDueUrgent(draft.dueDate)) c.coralFg else null)
-                }
                 ItemType.REMINDER ->
                     DetailRow("Reminds at", WeldoTime.formatDateTime(draft.remindAt), c.coralFg)
-                ItemType.WAITING_FOR -> {
-                    DetailRow("Waiting on", draft.waitingOn)
-                    DetailRow("Follow up", WeldoTime.formatDateTime(draft.followUpAt))
-                }
                 ItemType.ROUTINE -> {
                     DetailRow("State", if (draft.active) "Active" else "Paused", if (draft.active) c.posFg else c.muted)
                     DetailRow("Recurrence", draft.recurrenceRule)
                 }
-                ItemType.SUGGESTION -> DetailRow("Status", draft.status)
-                ItemType.IDEA, ItemType.NOTE -> Unit
+                ItemType.NOTE -> Unit
             }
             if (projectTitle != null) DetailRow("Project", projectTitle)
             DetailRow("Created", WeldoTime.formatDateTime(draft.createdAt))
@@ -322,11 +313,10 @@ private fun MetaChip(text: String, bg: Color, fg: Color) {
 private fun MetaChips(draft: ItemDraft, projectTitle: String?) {
     val c = WeldoTheme.colors
     when (draft.type) {
-        ItemType.TASK, ItemType.PROJECT, ItemType.COMMITMENT -> dueLabel(draft.dueDate)?.let {
+        ItemType.TASK, ItemType.PROJECT -> dueLabel(draft.dueDate)?.let {
             MetaChip(it, c.coralTintBg, c.coralFg)
         }
         ItemType.REMINDER -> WeldoTime.formatDateTime(draft.remindAt)?.let { MetaChip("Reminds $it", c.coralTintBg, c.coralFg) }
-        ItemType.WAITING_FOR -> WeldoTime.formatDateTime(draft.followUpAt)?.let { MetaChip("Follow up $it", c.coralTintBg, c.coralFg) }
         ItemType.ROUTINE -> {
             draft.recurrenceRule?.ifBlank { null }?.let { MetaChip(it, c.neutralBg, c.neutralFg) }
             if (draft.active) MetaChip("Active", c.posBg, c.posFg)

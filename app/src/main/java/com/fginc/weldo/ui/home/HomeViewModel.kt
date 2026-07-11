@@ -66,8 +66,8 @@ class HomeViewModel : ViewModel() {
 
     /**
      * Default view is top-level only; searching/filtering reveals all levels.
-     * Top-level = non-project items with no projectId + projects with no parentId
-     * (Project.toAny() nulls projectId, so top-level projects are taken from the raw list).
+     * Top-level = non-project items with no projectId + every project (projects don't nest).
+     * (Project.toAny() nulls projectId, so top-level projects are taken from the raw list.)
      */
     fun visibleItems(): List<AnyItem> {
         val s = _state.value
@@ -76,7 +76,7 @@ class HomeViewModel : ViewModel() {
             s.allItems.toAnyItems()
         } else {
             val nonProject = s.allItems.toAnyItems().filter { it.type != ItemType.PROJECT && it.projectId == null }
-            val topProjects = s.allItems.projects.filter { it.parentId == null }.map { it.toAny() }
+            val topProjects = s.allItems.projects.map { it.toAny() }
             nonProject + topProjects
         }
         return list
@@ -155,20 +155,14 @@ private fun String?.toDueMillis(): Long? =
 private fun AllItems.withCompleted(type: ItemType, id: String, completed: Boolean): AllItems = when (type) {
     ItemType.TASK -> copy(tasks = tasks.map { if (it.id == id) it.copy(completed = completed) else it })
     ItemType.PROJECT -> copy(projects = projects.map { if (it.id == id) it.copy(completed = completed) else it })
-    ItemType.COMMITMENT -> copy(commitments = commitments.map { if (it.id == id) it.copy(completed = completed) else it })
     ItemType.REMINDER -> copy(reminders = reminders.map { if (it.id == id) it.copy(completed = completed) else it })
-    ItemType.WAITING_FOR -> copy(waitingFor = waitingFor.map { if (it.id == id) it.copy(completed = completed) else it })
     else -> this
 }
 
 private fun AllItems.without(type: ItemType, id: String): AllItems = when (type) {
     ItemType.TASK -> copy(tasks = tasks.filterNot { it.id == id })
     ItemType.PROJECT -> copy(projects = projects.filterNot { it.id == id })
-    ItemType.COMMITMENT -> copy(commitments = commitments.filterNot { it.id == id })
     ItemType.REMINDER -> copy(reminders = reminders.filterNot { it.id == id })
-    ItemType.WAITING_FOR -> copy(waitingFor = waitingFor.filterNot { it.id == id })
-    ItemType.IDEA -> copy(ideas = ideas.filterNot { it.id == id })
     ItemType.ROUTINE -> copy(routines = routines.filterNot { it.id == id })
-    ItemType.SUGGESTION -> copy(suggestions = suggestions.filterNot { it.id == id })
     ItemType.NOTE -> copy(notes = notes.filterNot { it.id == id })
 }

@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.Button
@@ -110,6 +111,12 @@ fun CaptureBar(
             if (res != null) vm.classifyImage(res.first, res.second, projectId) else errorText = "Couldn't read that image"
         }
     }
+    val documentPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val res = FileUtil.uriToBase64(context, uri)
+            if (res != null) vm.classifyFile(res.first, res.second, res.third, projectId) else errorText = "Couldn't read that document"
+        }
+    }
 
     Surface(tonalElevation = 3.dp, modifier = modifier.fillMaxWidth()) {
         if (compact) {
@@ -191,6 +198,10 @@ fun CaptureBar(
                 showAiChooser = false
                 photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             },
+            onDocument = {
+                showAiChooser = false
+                documentPicker.launch(DOCUMENT_MIME_TYPES)
+            },
         )
     }
 
@@ -222,17 +233,26 @@ fun CaptureBar(
     }
 }
 
-/** "Use AI" — pick voice or photo capture; both feed the same /capture review. */
+/** Documents the backend's /capture/file accepts today (PDF, text, Markdown, .doc, .docx). */
+private val DOCUMENT_MIME_TYPES = arrayOf(
+    "application/pdf",
+    "text/plain",
+    "text/markdown",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+)
+
+/** "Use AI" — pick voice, photo, or document capture; all feed the same review sheet. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AiChooserSheet(onDismiss: () -> Unit, onVoice: () -> Unit, onPhoto: () -> Unit) {
+private fun AiChooserSheet(onDismiss: () -> Unit, onVoice: () -> Unit, onPhoto: () -> Unit, onDocument: () -> Unit) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp)) {
             Text("Use AI", style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(4.dp))
             Text(
-                "Capture by voice or photo — AI turns it into items.",
+                "Capture by voice, photo, or document — AI turns it into items.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = WeldoTheme.colors.muted,
             )
@@ -255,6 +275,15 @@ private fun AiChooserSheet(onDismiss: () -> Unit, onVoice: () -> Unit, onPhoto: 
                     tintBg = WeldoTheme.colors.coralTintBg,
                     modifier = Modifier.weight(1f),
                     onClick = onPhoto,
+                )
+                AiChoice(
+                    icon = Icons.Filled.Description,
+                    title = "Document",
+                    subtitle = "PDF, text, or Word file",
+                    tint = WeldoTheme.colors.violetTintFg,
+                    tintBg = WeldoTheme.colors.violetTintBg,
+                    modifier = Modifier.weight(1f),
+                    onClick = onDocument,
                 )
             }
         }

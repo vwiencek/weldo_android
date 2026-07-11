@@ -11,6 +11,7 @@ import com.fginc.weldo.data.model.Project
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 /** One-shot outcome of a capture round, consumed by [CaptureBar]. */
 sealed interface CaptureEvent {
@@ -59,6 +60,22 @@ class CaptureViewModel : ViewModel() {
         }
     }
 
+    fun classifyFile(base64: String, mime: String?, fileName: String?, contextProjectId: String?) {
+        viewModelScope.launch {
+            _busy.value = true
+            repo.captureFile(base64, mime, fileName)
+                .onSuccess { route(it, contextProjectId) }
+                .onFailure { e ->
+                    val unsupported = e is HttpException && e.code() == 415
+                    _event.value = CaptureEvent.Error(
+                        if (unsupported) "That file type isn't supported. Try a PDF, text, Markdown, or Word document."
+                        else "Couldn't read that document.",
+                    )
+                }
+            _busy.value = false
+        }
+    }
+
     private fun route(proposal: CaptureProposal, contextProjectId: String?) {
         val single = proposal.items.size == 1 && proposal.project == null && proposal.existingProjectId == null
         _event.value = if (single) {
@@ -82,10 +99,7 @@ fun CaptureItemProposal.toDraft(projectId: String?): ItemDraft {
         detail = detail.orEmpty(),
         projectId = projectId,
         dueDate = dueDate,
-        madeTo = madeTo,
-        waitingOn = waitingOn,
         remindAt = remindAt,
-        followUpAt = followUpAt,
         recurrenceRule = recurrenceRule,
     )
 }

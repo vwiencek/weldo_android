@@ -45,7 +45,7 @@ import com.fginc.weldo.data.remote.WeldoTime
 import kotlinx.coroutines.launch
 
 /**
- * Create/edit form for any of the nine types. Blank [initial] = "new"; a loaded draft = "edit"
+ * Create/edit form for any of the five types. Blank [initial] = "new"; a loaded draft = "edit"
  * (type locked). Saves via the repository's unified create/update path.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -162,46 +162,13 @@ private fun ProjectDropdown(label: String, selectedId: String?, projects: List<P
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun StatusDropdown(selected: String, onSelect: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    val options = listOf("PENDING", "ACCEPTED", "REJECTED")
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-        OutlinedTextField(
-            value = selected, onValueChange = {}, readOnly = true, label = { Text("Status") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable, true).fillMaxWidth(),
-        )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { s -> DropdownMenuItem(text = { Text(s) }, onClick = { onSelect(s); expanded = false }) }
-        }
-    }
-}
-
 @Composable
 private fun TypeSpecificFields(draft: ItemDraft, onChange: (ItemDraft) -> Unit) {
     when (draft.type) {
         ItemType.TASK, ItemType.PROJECT ->
             DateField("Due date", draft.dueDate, isInstant = false) { onChange(draft.copy(dueDate = it)) }
-        ItemType.COMMITMENT -> {
-            OutlinedTextField(
-                value = draft.madeTo.orEmpty(), onValueChange = { onChange(draft.copy(madeTo = it)) },
-                label = { Text("Made to") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(8.dp))
-            DateField("Due date", draft.dueDate, isInstant = false) { onChange(draft.copy(dueDate = it)) }
-        }
         ItemType.REMINDER ->
             DateField("Remind at", draft.remindAt, isInstant = true) { onChange(draft.copy(remindAt = it)) }
-        ItemType.WAITING_FOR -> {
-            OutlinedTextField(
-                value = draft.waitingOn.orEmpty(), onValueChange = { onChange(draft.copy(waitingOn = it)) },
-                label = { Text("Waiting on") }, singleLine = true, modifier = Modifier.fillMaxWidth(),
-            )
-            Spacer(Modifier.height(8.dp))
-            DateField("Follow up at", draft.followUpAt, isInstant = true) { onChange(draft.copy(followUpAt = it)) }
-        }
         ItemType.ROUTINE -> {
             OutlinedTextField(
                 value = draft.recurrenceRule.orEmpty(), onValueChange = { onChange(draft.copy(recurrenceRule = it)) },
@@ -213,8 +180,7 @@ private fun TypeSpecificFields(draft: ItemDraft, onChange: (ItemDraft) -> Unit) 
                 Switch(checked = draft.active, onCheckedChange = { onChange(draft.copy(active = it)) })
             }
         }
-        ItemType.SUGGESTION -> StatusDropdown(draft.status) { onChange(draft.copy(status = it)) }
-        ItemType.IDEA, ItemType.NOTE -> {}
+        ItemType.NOTE -> {}
     }
 }
 

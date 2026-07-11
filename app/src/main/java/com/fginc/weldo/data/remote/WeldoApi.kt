@@ -70,22 +70,6 @@ interface WeldoApi {
     @GET("projects/{id}/items")
     suspend fun getProjectItems(@Path("id") id: String): ProjectItems
 
-    // ---- Commitment ----
-    @POST("commitments")
-    suspend fun createCommitment(@Body body: Commitment): Commitment
-
-    @GET("commitments/{id}")
-    suspend fun getCommitment(@Path("id") id: String): Commitment
-
-    @PUT("commitments/{id}")
-    suspend fun updateCommitment(@Path("id") id: String, @Body body: Commitment): Commitment
-
-    @DELETE("commitments/{id}")
-    suspend fun deleteCommitment(@Path("id") id: String): Response<Unit>
-
-    @PUT("commitments/{id}/completed")
-    suspend fun setCommitmentCompleted(@Path("id") id: String, @Body body: CompletionUpdate): Commitment
-
     // ---- Reminder ----
     @POST("reminders")
     suspend fun createReminder(@Body body: Reminder): Reminder
@@ -102,35 +86,6 @@ interface WeldoApi {
     @PUT("reminders/{id}/completed")
     suspend fun setReminderCompleted(@Path("id") id: String, @Body body: CompletionUpdate): Reminder
 
-    // ---- WaitingFor ----
-    @POST("waiting-for")
-    suspend fun createWaitingFor(@Body body: WaitingFor): WaitingFor
-
-    @GET("waiting-for/{id}")
-    suspend fun getWaitingFor(@Path("id") id: String): WaitingFor
-
-    @PUT("waiting-for/{id}")
-    suspend fun updateWaitingFor(@Path("id") id: String, @Body body: WaitingFor): WaitingFor
-
-    @DELETE("waiting-for/{id}")
-    suspend fun deleteWaitingFor(@Path("id") id: String): Response<Unit>
-
-    @PUT("waiting-for/{id}/completed")
-    suspend fun setWaitingForCompleted(@Path("id") id: String, @Body body: CompletionUpdate): WaitingFor
-
-    // ---- Idea ----
-    @POST("ideas")
-    suspend fun createIdea(@Body body: Idea): Idea
-
-    @GET("ideas/{id}")
-    suspend fun getIdea(@Path("id") id: String): Idea
-
-    @PUT("ideas/{id}")
-    suspend fun updateIdea(@Path("id") id: String, @Body body: Idea): Idea
-
-    @DELETE("ideas/{id}")
-    suspend fun deleteIdea(@Path("id") id: String): Response<Unit>
-
     // ---- Routine ----
     @POST("routines")
     suspend fun createRoutine(@Body body: Routine): Routine
@@ -143,19 +98,6 @@ interface WeldoApi {
 
     @DELETE("routines/{id}")
     suspend fun deleteRoutine(@Path("id") id: String): Response<Unit>
-
-    // ---- Suggestion ----
-    @POST("suggestions")
-    suspend fun createSuggestion(@Body body: Suggestion): Suggestion
-
-    @GET("suggestions/{id}")
-    suspend fun getSuggestion(@Path("id") id: String): Suggestion
-
-    @PUT("suggestions/{id}")
-    suspend fun updateSuggestion(@Path("id") id: String, @Body body: Suggestion): Suggestion
-
-    @DELETE("suggestions/{id}")
-    suspend fun deleteSuggestion(@Path("id") id: String): Response<Unit>
 
     // ---- Note ----
     @POST("notes")
@@ -183,6 +125,12 @@ interface WeldoApi {
         @Header("X-Timezone") tz: String,
     ): CaptureProposal
 
+    @POST("capture/file")
+    suspend fun captureFile(
+        @Body body: CaptureFileRequest,
+        @Header("X-Timezone") tz: String,
+    ): CaptureProposal
+
     // ---- Profile & preferences ----
     @GET("profile")
     suspend fun getProfile(): UserProfile
@@ -193,8 +141,17 @@ interface WeldoApi {
     @GET("profile/handle-check")
     suspend fun handleCheck(@Query("handle") handle: String): Response<HandleCheckResponse>
 
+    @GET("profile/preferences")
+    suspend fun getPreferences(): Map<String, String>
+
+    @GET("profile/preferences/{key}")
+    suspend fun getPreference(@Path("key") key: String): PreferenceEntry
+
     @PUT("profile/preferences/{key}")
     suspend fun putPreference(@Path("key") key: String, @Body body: PreferenceValue): Response<Unit>
+
+    @DELETE("profile/preferences/{key}")
+    suspend fun deletePreference(@Path("key") key: String): Response<Unit>
 
     // ---- Statistics ----
     @GET("statistics")

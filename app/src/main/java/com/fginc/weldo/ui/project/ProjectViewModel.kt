@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 data class ProjectUiState(
     val loading: Boolean = true,
     val title: String = "",
-    val subprojects: List<Project> = emptyList(),
     val items: List<AnyItem> = emptyList(),
     val allProjects: List<Project> = emptyList(),
     val projectDraft: ItemDraft? = null,
@@ -38,7 +37,6 @@ class ProjectViewModel : ViewModel() {
                 .onSuccess { pi ->
                     _state.value = _state.value.copy(
                         loading = false,
-                        subprojects = pi.subprojects,
                         items = pi.toAnyItems(),
                     )
                 }

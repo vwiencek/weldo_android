@@ -30,14 +30,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fginc.weldo.data.model.AnyItem
 import com.fginc.weldo.data.model.ItemType
-import com.fginc.weldo.data.toAny
 import com.fginc.weldo.ui.capture.CaptureBar
 import com.fginc.weldo.ui.capture.ItemFormSheet
 import com.fginc.weldo.ui.common.ConfirmDialog
 import com.fginc.weldo.ui.common.EmptyState
 import com.fginc.weldo.ui.common.ItemRow
 import com.fginc.weldo.ui.common.LoadingBox
-import com.fginc.weldo.ui.common.SectionHeader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,25 +75,16 @@ fun ProjectScreen(
         when {
             state.loading -> LoadingBox(Modifier.padding(padding))
             state.error != null -> EmptyState("Couldn't load", state.error, Modifier.padding(padding))
-            state.subprojects.isEmpty() && state.items.isEmpty() ->
+            state.items.isEmpty() ->
                 EmptyState("Nothing here yet", "Use the bar below to add items to this project.", Modifier.padding(padding))
             else -> LazyColumn(Modifier.fillMaxSize().padding(padding)) {
-                if (state.subprojects.isNotEmpty()) {
-                    item { SectionHeader("Subprojects") }
-                    items(state.subprojects, key = { "p_${it.id}" }) { sub ->
-                        ItemRow(sub.toAny(), onClick = { sub.id?.let(onOpenProject) })
-                    }
-                }
-                if (state.items.isNotEmpty()) {
-                    item { SectionHeader("Items") }
-                    items(state.items, key = { "${it.type.wire}_${it.id}" }) { item ->
-                        ProjectItemRow(
-                            item = item,
-                            onClick = { onOpenItem(item.type, item.id) },
-                            onToggle = { vm.toggleComplete(item) },
-                            onDelete = { vm.deleteItem(item) },
-                        )
-                    }
+                items(state.items, key = { "${it.type.wire}_${it.id}" }) { item ->
+                    ProjectItemRow(
+                        item = item,
+                        onClick = { onOpenItem(item.type, item.id) },
+                        onToggle = { vm.toggleComplete(item) },
+                        onDelete = { vm.deleteItem(item) },
+                    )
                 }
             }
         }

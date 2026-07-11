@@ -4,11 +4,11 @@ import com.fginc.weldo.data.model.ItemType
 
 /**
  * A unified, editable shape spanning every field of every item type, so one form and one
- * detail screen can drive all nine. Only the fields relevant to [type] are shown/sent;
+ * detail screen can drive all five. Only the fields relevant to [type] are shown/sent;
  * mapping to the concrete wire model happens in [WeldoRepository].
  *
  * Date fields keep the wire convention: [dueDate] is a calendar day (yyyy-MM-dd);
- * [remindAt]/[followUpAt] are ISO instants.
+ * [remindAt] is an ISO instant.
  */
 data class ItemDraft(
     val type: ItemType,
@@ -17,13 +17,9 @@ data class ItemDraft(
     val detail: String = "",
     val projectId: String? = null,
     val dueDate: String? = null,
-    val madeTo: String? = null,
-    val waitingOn: String? = null,
     val remindAt: String? = null,
-    val followUpAt: String? = null,
     val recurrenceRule: String? = null,
     val active: Boolean = true,       // routine
-    val status: String = "PENDING",   // suggestion
     val completed: Boolean = false,
     val completedAt: String? = null,
     val createdAt: String? = null,

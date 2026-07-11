@@ -1,9 +1,10 @@
 package com.fginc.weldo.data.model
 
 /**
- * The nine GTD item types. [wire] is the capture/type string the backend uses
- * (note the underscore in `waiting_for`); [endpoint] is the REST base path
- * (note the hyphen in `waiting-for` and the singular `task`).
+ * The five item types (backend DOMAIN.md). [wire] is the capture/type string the
+ * backend uses; [endpoint] is the REST base path (note the singular `task`).
+ * Only task / project / reminder are completable; project is the container and
+ * does not nest.
  */
 enum class ItemType(
     val wire: String,
@@ -16,12 +17,8 @@ enum class ItemType(
     // (see ItemType.tone in ui/ItemVisuals). colorHex is the row/icon accent.
     TASK("task", "task", "Task", true, 0xFF7C3AED),
     PROJECT("project", "projects", "Project", true, 0xFF7C3AED),
-    COMMITMENT("commitment", "commitments", "Commitment", true, 0xFFFF6A3D),
     REMINDER("reminder", "reminders", "Reminder", true, 0xFFFF6A3D),
-    WAITING_FOR("waiting_for", "waiting-for", "Waiting For", true, 0xFF7C3AED),
-    IDEA("idea", "ideas", "Idea", false, 0xFF7C3AED),
     ROUTINE("routine", "routines", "Routine", false, 0xFF7C3AED),
-    SUGGESTION("suggestion", "suggestions", "Suggestion", false, 0xFFFF6A3D),
     NOTE("note", "notes", "Note", false, 0xFFFF6A3D);
 
     companion object {

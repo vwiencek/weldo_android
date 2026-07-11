@@ -38,24 +38,7 @@ data class Project(
     val userId: String? = null,
     val title: String = "",
     val detail: String = "",
-    val parentId: String? = null,
     val dueDate: String? = null,
-    @JsonNames("isCompleted") val completed: Boolean = false,
-    val completedAt: String? = null,
-    val createdAt: String? = null,
-    val updatedAt: String? = null,
-)
-
-@OptIn(ExperimentalSerializationApi::class)
-@Serializable
-data class Commitment(
-    val id: String? = null,
-    val userId: String? = null,
-    val title: String = "",
-    val detail: String = "",
-    val madeTo: String? = null,
-    val dueDate: String? = null,
-    val projectId: String? = null,
     @JsonNames("isCompleted") val completed: Boolean = false,
     val completedAt: String? = null,
     val createdAt: String? = null,
@@ -73,33 +56,6 @@ data class Reminder(
     val projectId: String? = null,
     @JsonNames("isCompleted") val completed: Boolean = false,
     val completedAt: String? = null,
-    val createdAt: String? = null,
-    val updatedAt: String? = null,
-)
-
-@OptIn(ExperimentalSerializationApi::class)
-@Serializable
-data class WaitingFor(
-    val id: String? = null,
-    val userId: String? = null,
-    val title: String = "",
-    val detail: String = "",
-    val waitingOn: String? = null,
-    val followUpAt: String? = null,
-    val projectId: String? = null,
-    @JsonNames("isCompleted") val completed: Boolean = false,
-    val completedAt: String? = null,
-    val createdAt: String? = null,
-    val updatedAt: String? = null,
-)
-
-@Serializable
-data class Idea(
-    val id: String? = null,
-    val userId: String? = null,
-    val title: String = "",
-    val detail: String = "",
-    val projectId: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null,
 )
@@ -130,43 +86,22 @@ data class Routine(
     val updatedAt: String? = null,
 )
 
-@Serializable
-data class Suggestion(
-    val id: String? = null,
-    val userId: String? = null,
-    val title: String = "",
-    val detail: String = "",
-    val status: String = "PENDING",
-    val projectId: String? = null,
-    val createdAt: String? = null,
-    val updatedAt: String? = null,
-)
-
-/** GET /items — the aggregate home feed (all nine types). `notes` may be absent on older servers. */
+/** GET /items — the aggregate home feed (the five item types). */
 @Serializable
 data class AllItems(
     val tasks: List<Task> = emptyList(),
     val projects: List<Project> = emptyList(),
-    val commitments: List<Commitment> = emptyList(),
     val reminders: List<Reminder> = emptyList(),
-    val ideas: List<Idea> = emptyList(),
-    val waitingFor: List<WaitingFor> = emptyList(),
     val routines: List<Routine> = emptyList(),
-    val suggestions: List<Suggestion> = emptyList(),
     val notes: List<Note> = emptyList(),
 )
 
-/** GET /projects/{id}/items — one project's subprojects + contents. */
+/** GET /projects/{id}/items — one project's contents (projects do not nest). */
 @Serializable
 data class ProjectItems(
-    val subprojects: List<Project> = emptyList(),
     val tasks: List<Task> = emptyList(),
-    val commitments: List<Commitment> = emptyList(),
     val reminders: List<Reminder> = emptyList(),
-    val ideas: List<Idea> = emptyList(),
-    val waitingFor: List<WaitingFor> = emptyList(),
     val routines: List<Routine> = emptyList(),
-    val suggestions: List<Suggestion> = emptyList(),
     val notes: List<Note> = emptyList(),
 )
 
@@ -213,6 +148,9 @@ data class HandleCheckResponse(val handle: String, val available: Boolean)
 
 @Serializable
 data class PreferenceValue(val value: String)
+
+@Serializable
+data class PreferenceEntry(val key: String, val value: String)
 
 // ---- Statistics ----
 

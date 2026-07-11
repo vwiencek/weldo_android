@@ -25,6 +25,9 @@ data class SettingsUiState(
     val statsPeriod: String = "month",
 )
 
+private const val STATS_PERIOD_KEY = "android.statsPeriod"
+private const val DEFAULT_STATS_PERIOD = "month"
+
 class SettingsViewModel : ViewModel() {
     private val repo = WeldoApp.graph.repository
     private val session = WeldoApp.graph.session
@@ -53,6 +56,13 @@ class SettingsViewModel : ViewModel() {
                 }
             }.onFailure { e ->
                 _state.update { it.copy(loading = false, error = e.message ?: "Couldn't load profile.") }
+            }
+            // Hydrate preference-backed settings from the server (source of truth across devices).
+            repo.getPreferences().onSuccess { prefs ->
+                prefs[STATS_PERIOD_KEY]?.let { period ->
+                    session.setStatsPeriod(period)
+                    _state.update { it.copy(statsPeriod = period) }
+                }
             }
         }
     }
@@ -103,7 +113,16 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch {
             session.setStatsPeriod(period)
             _state.update { it.copy(statsPeriod = period) }
-            repo.putPreference("android.statsPeriod", period)  // best-effort mirror to server
+            repo.putPreference(STATS_PERIOD_KEY, period)  // best-effort mirror to server
+        }
+    }
+
+    /** Clears the server-side stats-period preference and falls back to the local default. */
+    fun resetStatsPeriod() {
+        viewModelScope.launch {
+            repo.deletePreference(STATS_PERIOD_KEY)
+            session.setStatsPeriod(DEFAULT_STATS_PERIOD)
+            _state.update { it.copy(statsPeriod = DEFAULT_STATS_PERIOD) }
         }
     }
 

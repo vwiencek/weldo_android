@@ -152,11 +152,8 @@ private fun buildRequest(
             type = r.type.wire,
             title = r.title,
             detail = r.source.detail,
-            madeTo = r.source.madeTo,
-            waitingOn = r.source.waitingOn,
             dueDate = r.source.dueDate,
             remindAt = r.source.remindAt,
-            followUpAt = r.source.followUpAt,
             recurrenceRule = r.source.recurrenceRule,
         )
     }
