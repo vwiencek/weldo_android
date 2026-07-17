@@ -99,6 +99,17 @@ interface WeldoApi {
     @DELETE("routines/{id}")
     suspend fun deleteRoutine(@Path("id") id: String): Response<Unit>
 
+    /** Nudge-and-advance: stamps lastCompletedAt + rolls nextOccurrenceAt forward. */
+    @PUT("routines/{id}/complete")
+    suspend fun completeRoutine(@Path("id") id: String): Routine
+
+    // ---- Nudges (upcoming reminders + routine occurrences, for local notifications) ----
+    @GET("nudges/upcoming")
+    suspend fun getUpcomingNudges(
+        @Query("until") until: String?,
+        @Query("limit") limit: Int,
+    ): List<Nudge>
+
     // ---- Note ----
     @POST("notes")
     suspend fun createNote(@Body body: Note): Note

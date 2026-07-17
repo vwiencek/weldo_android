@@ -54,7 +54,14 @@ class HomeViewModel : ViewModel() {
                 .onFailure { e -> _state.update { it.copy(loading = false, error = e.message) } }
             repo.statistics(session.statsPeriod.value)
                 .onSuccess { s -> _state.update { it.copy(stats = s) } }
+            // Reconcile local notifications with the freshly-loaded reminders/routines.
+            WeldoApp.graph.nudgeScheduler.sync()
         }
+    }
+
+    /** Reconcile local notifications with the server (also called on app resume). */
+    fun syncNudges() {
+        viewModelScope.launch { WeldoApp.graph.nudgeScheduler.sync() }
     }
 
     fun setQuery(q: String) = _state.update { it.copy(query = q) }

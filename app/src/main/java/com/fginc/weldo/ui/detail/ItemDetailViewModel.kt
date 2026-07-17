@@ -57,13 +57,20 @@ class ItemDetailViewModel : ViewModel() {
         }
     }
 
-    /** Routine: mark done for today (best-effort; mirrors the web action). */
+    /**
+     * Routine "Mark done" — nudge-and-advance: PUT /routines/{id}/complete stamps
+     * lastCompletedAt and rolls the next occurrence forward, then we reschedule
+     * local notifications (the old occurrence drops out, the new one is added).
+     */
     fun markRoutineDone() {
         val draft = (_state.value as? DetailUiState.Loaded)?.draft ?: return
         val id = draft.id ?: return
         if (draft.type != ItemType.ROUTINE) return
         viewModelScope.launch {
-            repo.setCompleted(draft.type, id, true).onSuccess { refresh() }
+            repo.completeRoutine(id).onSuccess {
+                refresh()
+                WeldoApp.graph.nudgeScheduler.sync()
+            }
         }
     }
 

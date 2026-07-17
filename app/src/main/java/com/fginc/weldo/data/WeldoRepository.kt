@@ -1,5 +1,6 @@
 package com.fginc.weldo.data
 
+import com.fginc.weldo.WeldoApp
 import com.fginc.weldo.data.local.WeldoSession
 import com.fginc.weldo.data.model.*
 import com.fginc.weldo.data.remote.ApiProvider
@@ -41,7 +42,10 @@ class WeldoRepository(
         session.setAppleUserId(appleUserId)
     }
 
-    suspend fun signOut() = session.signOut()
+    suspend fun signOut() {
+        session.signOut()
+        WeldoApp.graph.nudgeScheduler.cancelAll()
+    }
 
     private fun authError(code: Int) = when (code) {
         400 -> "Password must be at least 8 characters."
@@ -57,6 +61,16 @@ class WeldoRepository(
 
     suspend fun statistics(period: String): Result<Statistics> =
         runCatching { api().getStatistics(period, WeldoTime.timezoneId()) }
+
+    // ---------------- Nudges (local-notification feed) ----------------
+
+    /** GET /nudges/upcoming — upcoming reminders + routine occurrences (server 30-day window). */
+    suspend fun upcomingNudges(limit: Int = 64): Result<List<Nudge>> =
+        runCatching { api().getUpcomingNudges(null, limit) }
+
+    /** PUT /routines/{id}/complete — nudge-and-advance (stamps lastCompletedAt, rolls next). */
+    suspend fun completeRoutine(id: String): Result<Unit> =
+        runCatching { api().completeRoutine(id); Unit }
 
     // ---------------- Completion / delete ----------------
 

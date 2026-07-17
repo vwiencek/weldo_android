@@ -109,6 +109,22 @@ data class ProjectItems(
 @Serializable
 data class CompletionUpdate(val completed: Boolean)
 
+/**
+ * GET /nudges/upcoming — one scheduled nudge (a reminder firing or a routine
+ * occurrence). [notificationId] is stable (`reminder:<id>` / `routine:<id>:<epoch>`)
+ * and used verbatim as the OS notification key so re-syncing dedups. [type] is
+ * "reminder" | "routine"; [itemId] is the source item (for deep-linking on tap);
+ * [fireAt] is the ISO instant it should fire.
+ */
+@Serializable
+data class Nudge(
+    val notificationId: String,
+    val type: String,
+    val itemId: String,
+    val title: String = "",
+    val fireAt: String,
+)
+
 // ---- Auth ----
 
 @Serializable

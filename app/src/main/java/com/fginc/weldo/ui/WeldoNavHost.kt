@@ -1,6 +1,7 @@
 package com.fginc.weldo.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -8,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.fginc.weldo.WeldoApp
 import com.fginc.weldo.data.model.ItemType
+import com.fginc.weldo.notifications.NudgeDeepLink
 import com.fginc.weldo.ui.detail.ItemDetailScreen
 import com.fginc.weldo.ui.login.LoginScreen
 import com.fginc.weldo.ui.project.ProjectScreen
@@ -27,9 +29,22 @@ object Routes {
 }
 
 @Composable
-fun WeldoNavHost() {
+fun WeldoNavHost(
+    pendingDeepLink: NudgeDeepLink? = null,
+    onDeepLinkConsumed: () -> Unit = {},
+) {
     val nav = rememberNavController()
     val start = if (WeldoApp.graph.session.isSignedIn) Routes.HOME else Routes.LOGIN
+
+    // A tapped nudge notification opens the item's detail screen (if signed in).
+    LaunchedEffect(pendingDeepLink) {
+        val dl = pendingDeepLink ?: return@LaunchedEffect
+        if (WeldoApp.graph.session.isSignedIn) {
+            val type = ItemType.fromWire(dl.type) ?: ItemType.TASK
+            nav.navigate(Routes.item(type, dl.itemId))
+        }
+        onDeepLinkConsumed()
+    }
 
     NavHost(navController = nav, startDestination = start) {
         composable(Routes.LOGIN) {

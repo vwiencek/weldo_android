@@ -21,7 +21,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import com.fginc.weldo.data.model.ItemType
 import com.fginc.weldo.ui.capture.CaptureBar
 import com.fginc.weldo.ui.home.AgendaScreen
@@ -53,6 +62,22 @@ fun MainShell(
     var tab by remember { mutableStateOf(MainTab.HOME) }
     val homeVm: HomeViewModel = viewModel()
     LaunchedEffect(Unit) { homeVm.load() }
+
+    // Ask for POST_NOTIFICATIONS (API 33+) so nudge notifications can show; re-sync on grant.
+    val context = LocalContext.current
+    val notifPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) homeVm.syncNudges()
+    }
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            notifPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+    // Reconcile the notification schedule whenever the app returns to the foreground.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { homeVm.syncNudges() }
 
     Scaffold(
         topBar = {
